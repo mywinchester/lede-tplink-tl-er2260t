@@ -6,6 +6,7 @@
 
 #include "ipq8074.dtsi"
 #include "ipq8074-hk-cpu.dtsi"
+#include "ipq8074-ac-nss.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/leds/common.h>
@@ -18,12 +19,12 @@
 	interrupt-parent = <&intc>;
 
 	aliases {
-		led-boot = &led_sys;
-		led-failsafe = &led_sys;
-		led-running = &led_sys;
-		led-upgrade = &led_sys;
 		serial0 = &blsp1_uart5;
-
+		/* Alias as required by u-boot to patch MAC addresses */
+		led-boot = &led_system_green;
+		led-failsafe = &led_system_green;
+		led-running = &led_system_green;
+		led-upgrade = &led_system_green;
 		ethernet0 = "/soc/dp1";
 		ethernet1 = "/soc/dp2";
 		ethernet2 = "/soc/dp3";
@@ -46,35 +47,58 @@
 			label = "reset";
 			linux,code = <KEY_RESTART>;
 			gpios = <&tlmm 50 GPIO_ACTIVE_LOW>;
-			linux,input-type = <1>;
-			debounce-interval = <60>;
 		};
 	};
 
 	leds {
 		compatible = "gpio-leds";
-		pinctrl-0 = <&leds_pins>;
-		pinctrl-names = "default";
 
-		led_sys: sys {
-			label = "green:sys";
+		led_system_green: system-green {
+			label = "green:system";
 			gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
+			color = <LED_COLOR_ID_GREEN>;
 		};
 
-		usb {
+		led_usb_green {
 			label = "green:usb";
 			gpios = <&tlmm 22 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger = "usbport";
+			color = <LED_COLOR_ID_GREEN>;
 		};
 
-		sfp1-green {
-			label = "green:sfp1";
-			gpios = <&tlmm 51 GPIO_ACTIVE_HIGH>;
+		led_sfp1_speed_green {
+			label = "green:sfp1-10g";
+			gpios = <&tlmm 52 GPIO_ACTIVE_HIGH>;
+			color = <LED_COLOR_ID_GREEN>;
 		};
 
-		sfp2-green {
-			label = "green:sfp2";
-			gpios = <&tlmm 55 GPIO_ACTIVE_HIGH>;
+		led_sfp1_speed_amber {
+			label = "amber:sfp1-1g";
+			gpios = <&tlmm 54 GPIO_ACTIVE_HIGH>;
+			color = <LED_COLOR_ID_AMBER>;
+		};
+
+		led_sfp1_act_green {
+			label = "green:sfp1-act";
+			gpios = <&tlmm 51 GPIO_ACTIVE_LOW>;
+			color = <LED_COLOR_ID_GREEN>;
+		};
+
+		led_sfp2_speed_green {
+			label = "green:sfp2-10g";
+			gpios = <&tlmm 56 GPIO_ACTIVE_HIGH>;
+			color = <LED_COLOR_ID_GREEN>;
+		};
+
+		led_sfp2_speed_amber {
+			label = "amber:sfp2-1g";
+			gpios = <&tlmm 64 GPIO_ACTIVE_HIGH>;
+			color = <LED_COLOR_ID_AMBER>;
+		};
+
+		led_sfp2_act_green {
+			label = "green:sfp2-act";
+			gpios = <&tlmm 55 GPIO_ACTIVE_LOW>;
+			color = <LED_COLOR_ID_GREEN>;
 		};
 	};
 	
@@ -96,21 +120,16 @@
 
 &tlmm {
 	mdio_pins: mdio_pinmux {
-		mux_0 {
+		mdc {
 			pins = "gpio68";
 			function = "mdc";
 			drive-strength = <8>;
 			bias-pull-up;
 		};
-		mux_1 {
+		mdio {
 			pins = "gpio69";
 			function = "mdio";
 			drive-strength = <8>;
-			bias-pull-up;
-		};
-		mux_2 {
-			pins = "gpio44";
-			function = "gpio";
 			bias-pull-up;
 		};
 	};
@@ -131,36 +150,10 @@
 		};
 	};
 
-	uniphy_pins: uniphy_pinmux {
-		mux {
-			pins = "gpio60";
-			function = "rx2";
-			bias-disable;
-		};
-		sfp_tx {
-			pins = "gpio59";
-			function = "gpio";
-			drive-strength = <8>;
-			bias-pull-down;
-			output-high;
-		};
-	};
-
 	leds_pins: leds_pinmux {
 		mux {
-			pins = "gpio21", "gpio22", "gpio65";
-			function = "gpio";
-			drive-strength = <8>;
-			bias-pull-down;
-		};
-		led_sfp1_active {
-			pins = "gpio51";
-			function = "gpio";
-			drive-strength = <8>;
-			bias-pull-down;
-		};
-		led_sfp2_active {
-			pins = "gpio55";
+			pins = "gpio21", "gpio22", "gpio51", "gpio52", 
+				"gpio54", "gpio55", "gpio56", "gpio64";
 			function = "gpio";
 			drive-strength = <8>;
 			bias-pull-down;
@@ -174,19 +167,19 @@
 	pinctrl-names = "default";
 	reset-gpios = <&tlmm 37 GPIO_ACTIVE_LOW>;
 
-	phy0:ethernet-phy@0 {
+	phy0: ethernet-phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0>;
 	};
-	phy1:ethernet-phy@1 {
+	phy1: ethernet-phy@1 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
 	};
-	phy2:ethernet-phy@2 {
+	phy2: ethernet-phy@2 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <2>;
 	};
-	phy3:ethernet-phy@3 {
+	phy3: ethernet-phy@3 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <3>;
 	};
@@ -201,8 +194,8 @@
 &ess_switch {
 	status = "okay";
 	switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
-	switch_lan_bmp = <0x3e>; /* lan port bitmap */
-	switch_wan_bmp = <0x40>; /* wan port bitmap */
+	switch_lan_bmp = <0x7e>; /* lan port bitmap */
+	switch_wan_bmp = <0x00>; /* wan port bitmap */
 	switch_mac_mode = <0xb>; /* mac mode for uniphy instance0*/
 	switch_mac_mode1 = <0xe>; /* mac mode for uniphy instance1*/ //use 10g_baser mode for default
 	switch_mac_mode2 = <0xe>; /* mac mode for uniphy instance2*/ //use 10g_baser mode for default
@@ -569,7 +562,7 @@
 		device_type = "network";
 		compatible = "qcom,nss-dp";
 		qcom,id = <5>;
-		reg = <0x3a001800 0x200>;
+		reg = <0x3a003000 0x3fff>;
 		qcom,mactype = <1>;
 		local-mac-address = [000000000000];
 		qcom,link-poll = <1>;
@@ -617,6 +610,11 @@
 	pinctrl-0 = <&i2c_1_pins>;
 	pinctrl-names = "default";
 	status = "okay";
+
+	rtc@51 {
+		compatible = "nxp,pcf85063";
+		reg = <0x51>;
+	};
 };
 
 &blsp1_uart5 {
@@ -628,6 +626,10 @@
 };
 
 &crypto {
+	status = "okay";
+};
+
+&prng {
 	status = "okay";
 };
 
@@ -661,5 +663,17 @@
 };
 
 &usb_0 {
+	status = "okay";
+};
+
+&qusb_phy_1 {
+	status = "okay";
+};
+
+&ssphy_1 {
+	status = "okay";
+};
+
+&usb_1 {
 	status = "okay";
 };
