@@ -13,6 +13,8 @@ redmi,ax6)
 	;;
 tplink,tl-er2260t)
 	ucidef_set_led_usbdev "usb" "USB" "green:usb" "1-1"
+	ucidef_set_led_netdev "sfp1-link" "SFP1 (Link)" "green:sfp1-10g" "eth4" "link"
+	ucidef_set_led_netdev "sfp2-link" "SFP2 (Link)" "green:sfp2-10g" "eth5" "link"
 	ucidef_set_led_netdev "sfp1-activity" "SFP1 (Activity)" "green:sfp1-act" "eth4" "tx rx"
 	ucidef_set_led_netdev "sfp2-activity" "SFP2 (Activity)" "green:sfp2-act" "eth5" "tx rx"
 	;;

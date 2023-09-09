@@ -47,14 +47,14 @@ TARGET_DEVICES += zte_mf269
 
 define Device/tplink_tl-er2260t
 	$(call Device/FitImage)
-	$(call Device/UbiFit)  
-	DEVICE_DTS := ipq8070-tl-er2260t
-	DEVICE_DTS_CONFIG := config@hk07
+	$(call Device/UbiFit)
+	DEVICE_VENDOR := TP-Link
+	DEVICE_MODEL := TL-ER2260T
 	BLOCKSIZE := 128k
 	PAGESIZE := 2048
-	BOARD_NAME := tplink,tl-er2260t
-	DEVICE_TITLE := TPLINK TL-ER2260T
-	DEVICE_PACKAGES := qca-ssdk-shell
+	DEVICE_DTS_CONFIG := config@hk07
+	SOC := ipq8070
+	DEVICE_PACKAGES := qca-ssdk-shell kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += tplink_tl-er2260t
 
